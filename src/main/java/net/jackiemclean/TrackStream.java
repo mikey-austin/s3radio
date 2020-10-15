@@ -1,5 +1,9 @@
 package net.jackiemclean;
 
 public interface TrackStream {
-    void play();
+    long play(Track track);
+
+    void start();
+
+    void stop();
 }

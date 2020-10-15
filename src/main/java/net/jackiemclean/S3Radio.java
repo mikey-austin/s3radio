@@ -1,7 +1,5 @@
 package net.jackiemclean;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,7 +61,7 @@ public class S3Radio implements Radio {
     private Set<Station> readFromS3() {
         LOG.info("searching for stations in the S3 bucket: " + bucketName);
 
-        Set<Station> s3Stations = new HashSet<>();
+        Set<Station> stations = new HashSet<>();
         ObjectListing objectList = s3Client.listObjects(bucketName);
         boolean isTruncated = false;
         String lastName = "";
@@ -74,7 +72,7 @@ public class S3Radio implements Radio {
                 String name = summary.getKey().split("/")[0];
                 if (!name.equals(lastName)) {
                     long lastModified = summary.getLastModified().toInstant().getEpochSecond();
-                    s3Stations.add(stationFactory.create(name, summary.getBucketName(), lastModified));
+                    stations.add(stationFactory.create(name, summary.getBucketName(), lastModified));
                     lastName = name;
                 }
             }
@@ -84,7 +82,7 @@ public class S3Radio implements Radio {
             }
         } while (isTruncated);
 
-        return s3Stations;
+        return stations;
     }
 
     public void onShutdown(@Observes ShutdownEvent shutdownEvent) {

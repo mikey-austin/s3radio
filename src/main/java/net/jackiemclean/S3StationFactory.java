@@ -9,11 +9,11 @@ import com.amazonaws.services.s3.AmazonS3;
 public class S3StationFactory {
 
     private final AmazonS3 s3Client;
-    private final TrackStreamerFactory streamerFactory;
+    private final TrackStreamFactory streamerFactory;
     private final TrackFactory trackFactory;
 
     @Inject
-    public S3StationFactory(AmazonS3 s3Client, TrackStreamerFactory streamerFactory, TrackFactory trackFactory) {
+    public S3StationFactory(AmazonS3 s3Client, TrackStreamFactory streamerFactory, TrackFactory trackFactory) {
         this.s3Client = s3Client;
         this.streamerFactory = streamerFactory;
         this.trackFactory = trackFactory;

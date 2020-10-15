@@ -24,14 +24,14 @@ public class S3Station implements Station, Runnable {
     private final String bucket;
     private final long lastModified;
     private final AmazonS3 s3Client;
-    private final TrackStreamerFactory streamerFactory;
+    private final TrackStreamFactory streamerFactory;
     private final TrackFactory trackFactory;
 
     private volatile boolean shutdown = false;
     private volatile Thread streamThread = null;
 
     public S3Station(String name, String bucket, long lastModified, AmazonS3 s3Client,
-            TrackStreamerFactory streamerFactory, TrackFactory trackFactory) {
+            TrackStreamFactory streamerFactory, TrackFactory trackFactory) {
         this.name = name;
         this.bucket = bucket;
         this.lastModified = lastModified;
@@ -49,16 +49,20 @@ public class S3Station implements Station, Runnable {
 
     @Override
     public void run() {
+        TrackStream stream = streamerFactory.createStream(this);
+        stream.start();
+        this.currentStream.set(stream);
+
         while (!shutdown) {
             for (Track track : this) {
-                TrackStream stream = streamerFactory.createStream(track);
-                this.currentStream.set(stream);
-                stream.play();
+                stream.play(track);
                 if (shutdown) {
                     break;
                 }
             }
         }
+
+        stream.stop();
     }
 
     @Override
