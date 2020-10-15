@@ -1,33 +1,32 @@
 package net.jackiemclean;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
-import org.slf4j.LoggerFactory;
+import org.apache.http.nio.client.HttpAsyncClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class TrackStreamFactory {
+
+    private final HttpAsyncClient httpClient;
+    private final RateLimitedOutputStreamFactory streamFactory;
+    private final String icecastBaseUri;
+
+    @Inject
+    public TrackStreamFactory(HttpAsyncClient httpClient, RateLimitedOutputStreamFactory streamFactory,
+            @ConfigProperty(name = "icecast.baseUri") String icecastBaseUri) {
+        this.httpClient = httpClient;
+        this.streamFactory = streamFactory;
+        this.icecastBaseUri = icecastBaseUri;
+    }
+
     public TrackStream createStream(Station station) {
-        return new TrackStream() {
-            @Override
-            public long play(Track track) {
-                LoggerFactory.getLogger(TrackStream.class).info("playing track: {}", track);
-                try {
-                    Thread.sleep(10_000);
-                } catch (InterruptedException e) {
-                }
-                return 0L;
-            }
+        // We only support ogg streams.
+        String streamName = station.getName() + ".ogg";
 
-            @Override
-            public void start() {
-                LoggerFactory.getLogger(TrackStream.class).info("starting track stream for station: {}", station);
-            }
-
-            @Override
-            public void stop() {
-                LoggerFactory.getLogger(TrackStream.class).info("stopping track stream for station: {}", station);
-
-            }
-        };
+        // TODO: find a better way to obtain the stream metadata.
+        return new IceCastTrackStream(streamName, "private radio", "jazz", icecastBaseUri, "audio/ogg", httpClient,
+                streamFactory.create());
     }
 }

@@ -1,9 +1,11 @@
 package net.jackiemclean;
 
+import java.io.IOException;
+
 public interface TrackStream {
-    long play(Track track);
+    long play(Track track) throws IOException;
 
-    void start();
+    void start() throws IOException;
 
-    void stop();
+    void stop() throws IOException;
 }

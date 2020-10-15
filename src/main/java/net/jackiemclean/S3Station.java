@@ -43,26 +43,35 @@ public class S3Station implements Station, Runnable {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
     public Iterator<Track> iterator() {
         return this.new TrackIterator();
     }
 
     @Override
     public void run() {
-        TrackStream stream = streamerFactory.createStream(this);
-        stream.start();
-        this.currentStream.set(stream);
+        try {
+            TrackStream stream = streamerFactory.createStream(this);
+            stream.start();
+            this.currentStream.set(stream);
 
-        while (!shutdown) {
-            for (Track track : this) {
-                stream.play(track);
-                if (shutdown) {
-                    break;
+            while (!shutdown) {
+                for (Track track : this) {
+                    stream.play(track);
+                    if (shutdown) {
+                        break;
+                    }
                 }
             }
-        }
 
-        stream.stop();
+            stream.stop();
+        } catch (Exception e) {
+            LOG.error("exception during stream operation: {}", name, e);
+        }
     }
 
     @Override

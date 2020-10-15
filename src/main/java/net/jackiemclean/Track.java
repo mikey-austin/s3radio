@@ -20,4 +20,20 @@ public class Track {
     public String toString() {
         return "Track [name=" + name + ", sizeInBytes=" + sizeInBytes + ", station=" + station + "]";
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public Station getStation() {
+        return station;
+    }
+
+    public InputStream getContent() {
+        return content;
+    }
+
+    public long getSizeInBytes() {
+        return sizeInBytes;
+    }
 }
