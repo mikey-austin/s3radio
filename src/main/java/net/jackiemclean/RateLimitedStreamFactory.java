@@ -1,6 +1,6 @@
 package net.jackiemclean;
 
-import java.io.PipedOutputStream;
+import java.io.InputStream;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
@@ -9,17 +9,21 @@ import javax.inject.Inject;
 import com.google.common.util.concurrent.RateLimiter;
 
 @Dependent
-public class RateLimitedOutputStreamFactory {
+public class RateLimitedStreamFactory {
 
     private final RateLimiter rateLimiter;
 
     @Inject
-    public RateLimitedOutputStreamFactory(RateLimiter rateLimiter) {
+    public RateLimitedStreamFactory(RateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
+    }
+
+    public RateLimitedInputStream limitInputStream(InputStream delegate) {
+        return new RateLimitedInputStream(delegate, rateLimiter);
     }
 
     @Produces
     public RateLimitedOutputStream create() {
-        return new RateLimitedOutputStream(new PipedOutputStream(), rateLimiter);
+        return new RateLimitedOutputStream(rateLimiter);
     }
 }

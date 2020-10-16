@@ -20,6 +20,7 @@
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
     <httpclient.version>4.1.4</httpclient.version>
     <guava.version>29.0-jre</guava.version>
+    <libshout-java.version>2.3.1</libshout-java.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -61,6 +62,11 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpasyncclient</artifactId>
       <version>${httpclient.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.gmail.kunicins.olegs</groupId>
+      <artifactId>libshout-java</artifactId>
+      <version>${libshout-java.version}</version>
     </dependency>
   </dependencies>
   <build>

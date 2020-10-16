@@ -2,7 +2,9 @@ package net.jackiemclean;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.core.UriBuilder;
@@ -25,41 +27,57 @@ public class IceCastTrackStream implements TrackStream {
     private final URI icecastUri;
     private final HttpAsyncClient httpClient;
 
-    private RateLimitedOutputStream streamOut;
+    private PipedOutputStream streamOut;
+    private RateLimitedStreamFactory streamFactory;
     private String description;
     private String genre;
     private Future<HttpResponse> response;
 
     IceCastTrackStream(String name, String description, String genre, String icecastUri, String contentType,
-                       HttpAsyncClient httpClient, RateLimitedOutputStream streamOut) {
+            HttpAsyncClient httpClient, RateLimitedStreamFactory streamFactory) {
         this.name = name;
         this.description = description;
         this.genre = genre;
         this.contentType = contentType;
         this.icecastUri = UriBuilder.fromUri(icecastUri).path(name).build();
         this.httpClient = httpClient;
-        this.streamOut = streamOut;
+        this.streamFactory = streamFactory;
+        this.streamOut = new PipedOutputStream();
+    }
+
+    @Override
+    public Optional<Track> getNowPlaying() {
+        return Optional.empty();
+    }
+
+    @Override
+    public int getPercentPlayed() {
+        return 0;
     }
 
     @Override
     public long play(Track track) throws IOException {
-        return track.getContent().transferTo(this.streamOut);
+        LOG.info("about to stream track: {}", track);
+        return streamFactory.limitInputStream(track.getContent()).transferTo(this.streamOut);
     }
 
     @Override
     public void start() throws IOException {
-        PipedInputStream streamIn = new PipedInputStream(this.streamOut.getDelegate());
+        PipedInputStream streamIn = new PipedInputStream();
+        streamIn.connect(streamOut);
         HttpEntity streamEntity = new InputStreamEntity(streamIn);
 
         HttpPut httpPut = new HttpPut(icecastUri);
         httpPut.setEntity(streamEntity);
         httpPut.expectContinue();
+        httpPut.setHeader("Authorization", "Basic c291cmNlOmhhY2ttZQ=="); // TODO
         httpPut.setHeader("Content-type", contentType);
         httpPut.setHeader("Ice-Name", name);
         httpPut.setHeader("Ice-Description", description);
         httpPut.setHeader("Ice-Genre", genre);
+        httpPut.setHeader("Ice-Audio-Info", "samplerate=44100;quality=10%2e0;channels=2"); // TODO
 
-        this.response = this.httpClient.execute(httpPut, new FutureCallback<HttpResponse>() {
+        FutureCallback<HttpResponse> cb = new FutureCallback<HttpResponse>() {
             @Override
             public void completed(HttpResponse result) {
                 LOG.info("icecast stream completed for: {}", name);
@@ -74,7 +92,9 @@ public class IceCastTrackStream implements TrackStream {
             public void cancelled() {
                 LOG.info("icecast request cancelled for stream: {}", name);
             }
-        });
+        };
+
+        this.response = httpClient.execute(httpPut, cb);
     }
 
     @Override

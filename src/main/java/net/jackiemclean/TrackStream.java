@@ -1,6 +1,7 @@
 package net.jackiemclean;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public interface TrackStream {
     long play(Track track) throws IOException;
@@ -8,4 +9,8 @@ public interface TrackStream {
     void start() throws IOException;
 
     void stop() throws IOException;
+
+    int getPercentPlayed();
+
+    Optional<Track> getNowPlaying();
 }
