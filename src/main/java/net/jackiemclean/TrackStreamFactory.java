@@ -28,8 +28,6 @@ public class TrackStreamFactory {
     }
 
     public TrackStream createStream(Station station) {
-        // We only support ogg streams.
-        String streamName = station.getName() + ".ogg";
-        return new LibshoutTrackStream(streamName, icecastBaseUri, sourcePassword, libshoutPath);
+        return new LibshoutTrackStream(station.getName(), icecastBaseUri, sourcePassword, libshoutPath);
     }
 }

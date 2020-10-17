@@ -81,6 +81,10 @@ public class S3Station implements Station, Runnable {
         }
 
         LOG.info("starting station: " + name);
+        try {
+            Thread.sleep(5_000);
+        } catch (InterruptedException e) {
+        }
         this.streamThread = new Thread(this);
         this.streamThread.start();
     }
@@ -142,7 +146,7 @@ public class S3Station implements Station, Runnable {
 
         private void setNextIterator(ObjectListing listing) {
             this.listingIterator = Iterators.filter(listing.getObjectSummaries().iterator(),
-                    os -> os.getKey().endsWith(".ogg"));
+                    os -> os.getKey().endsWith(".ogg") || os.getKey().endsWith(".mp3"));
         }
 
         @Override

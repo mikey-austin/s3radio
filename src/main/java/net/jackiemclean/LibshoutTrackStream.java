@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.core.UriBuilder;
 
 import com.gmail.kunicins.olegs.libshout.Libshout;
+import com.google.common.io.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ public class LibshoutTrackStream implements TrackStream {
     private final String libshoutPath;
     private final AtomicReference<Track> currentTrack;
     private final AtomicInteger currentTrackBytesSoFar;
+    private final int streamFormat;
 
     private Libshout icecast;
 
@@ -40,6 +42,7 @@ public class LibshoutTrackStream implements TrackStream {
         this.libshoutPath = libshoutPath;
         this.currentTrack = new AtomicReference<>();
         this.currentTrackBytesSoFar = new AtomicInteger();
+        this.streamFormat = name.endsWith(".mp3") ? Libshout.FORMAT_MP3 : Libshout.FORMAT_OGG;
     }
 
     @Override
@@ -63,7 +66,8 @@ public class LibshoutTrackStream implements TrackStream {
         currentTrack.set(track);
         currentTrackBytesSoFar.set(0);
 
-        File tmpFile = File.createTempFile("stream-buffer", ".ogg");
+        String extension = streamFormat == Libshout.FORMAT_MP3 ? ".mp3" : ".ogg";
+        File tmpFile = File.createTempFile("stream-buffer", extension);
         try (OutputStream tmpFileOutput = new FileOutputStream(tmpFile);
                 InputStream onDiskStream = new FileInputStream(tmpFile)) {
             track.getContent().transferTo(tmpFileOutput);
@@ -96,7 +100,8 @@ public class LibshoutTrackStream implements TrackStream {
         icecast.setProtocol(Libshout.PROTOCOL_HTTP);
         icecast.setPassword(password);
         icecast.setMount(name);
-        icecast.setFormat(Libshout.FORMAT_OGG);
+        icecast.setFormat(streamFormat);
+        icecast.setName(Files.getNameWithoutExtension(name));
         icecast.open();
     }
 
