@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.UriBuilder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gmail.kunicins.olegs.libshout.Libshout;
 import com.google.common.io.Files;
 
@@ -25,14 +27,22 @@ public class LibshoutTrackStream implements TrackStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(LibshoutTrackStream.class);
 
+    @JsonProperty
     private final String name;
+    @JsonProperty
     private final URI icecastUri;
+    @JsonIgnore
     private final String password;
+    @JsonIgnore
     private final String libshoutPath;
+    @JsonProperty
     private final AtomicReference<Track> currentTrack;
+    @JsonProperty
     private final AtomicInteger currentTrackBytesSoFar;
+    @JsonProperty
     private final int streamFormat;
 
+    @JsonIgnore
     private Libshout icecast;
 
     LibshoutTrackStream(String name, String icecastUri, String password, String libshoutPath) {

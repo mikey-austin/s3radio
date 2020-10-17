@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 
@@ -19,8 +20,11 @@ public class S3Station implements Station, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(S3Station.class);
 
     private final AtomicBoolean isStarted;
+    @JsonProperty
     private final AtomicReference<TrackStream> currentStream;
+    @JsonProperty
     private final String name;
+    @JsonProperty
     private final String bucket;
     private final long lastModified;
     private final AmazonS3 s3Client;

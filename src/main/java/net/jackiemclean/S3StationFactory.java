@@ -19,7 +19,7 @@ public class S3StationFactory {
         this.trackFactory = trackFactory;
     }
 
-    public Station create(String name, String bucket, long lastModified) {
+    public S3Station create(String name, String bucket, long lastModified) {
         return new S3Station(name, bucket, lastModified, s3Client, streamerFactory, trackFactory);
     }
 }

@@ -2,12 +2,19 @@ package net.jackiemclean;
 
 import java.io.InputStream;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Track {
 
+    @JsonProperty
     public final String name;
-    public final Station station;
-    public final InputStream content;
+    @JsonProperty
     public final long sizeInBytes;
+    @JsonIgnore
+    public final Station station;
+    @JsonIgnore
+    public final InputStream content;
 
     public Track(String name, Station station, InputStream content, long size) {
         this.name = name;

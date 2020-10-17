@@ -93,4 +93,9 @@ public class S3Radio implements Radio {
     public Collection<Station> getStations() {
         return Collections.unmodifiableSet(stations);
     }
+
+    @Override
+    public String toString() {
+        return "S3Radio [bucketName=" + bucketName + ", stations=" + stations + "]";
+    }
 }
