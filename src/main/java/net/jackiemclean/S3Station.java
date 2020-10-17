@@ -82,11 +82,11 @@ public class S3Station implements Station, Runnable {
 
         LOG.info("starting station: " + name);
         try {
-            Thread.sleep(5_000);
+            this.streamThread = new Thread(this);
+            this.streamThread.start();
+            Thread.sleep(2_000);
         } catch (InterruptedException e) {
         }
-        this.streamThread = new Thread(this);
-        this.streamThread.start();
     }
 
     @Override
@@ -94,6 +94,7 @@ public class S3Station implements Station, Runnable {
         LOG.info("stopping station: " + name);
         this.shutdown = true;
         try {
+            this.streamThread.interrupt();
             this.streamThread.join();
         } catch (Exception e) {
             LOG.error("error shutting down station: " + name, e);

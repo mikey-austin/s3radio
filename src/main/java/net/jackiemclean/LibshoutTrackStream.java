@@ -84,6 +84,10 @@ public class LibshoutTrackStream implements TrackStream {
                 }
                 nRead = onDiskStream.read(buf);
                 currentTrackBytesSoFar.getAndAdd(nRead);
+
+                if (Thread.interrupted()) {
+                    break;
+                }
             }
         } finally {
             tmpFile.delete();
