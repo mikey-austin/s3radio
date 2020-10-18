@@ -29,20 +29,13 @@ public class LibshoutTrackStream implements TrackStream {
 
     @JsonProperty
     private final String name;
-    @JsonProperty
     private final URI icecastUri;
-    @JsonIgnore
     private final String password;
-    @JsonIgnore
     private final String libshoutPath;
-    @JsonProperty
     private final AtomicReference<Track> currentTrack;
-    @JsonProperty
     private final AtomicInteger currentTrackBytesSoFar;
-    @JsonProperty
     private final int streamFormat;
 
-    @JsonIgnore
     private Libshout icecast;
 
     LibshoutTrackStream(String name, String icecastUri, String password, String libshoutPath) {
@@ -56,18 +49,22 @@ public class LibshoutTrackStream implements TrackStream {
     }
 
     @Override
+    @JsonProperty("nowPlaying")
     public Optional<Track> getNowPlaying() {
         return Optional.ofNullable(currentTrack.get());
     }
 
     @Override
+    @JsonProperty("percentPlayed")
     public int getPercentPlayed() {
         Track track = currentTrack.get();
-        int bytesSoFar = currentTrackBytesSoFar.get();
         if (track == null || track.getSizeInBytes() <= 0) {
             return 0;
         }
-        return Math.round((bytesSoFar / track.getSizeInBytes()) * 100);
+
+        double bytesSoFar = currentTrackBytesSoFar.get();
+        double proportionPlayed = bytesSoFar / track.getSizeInBytes();
+        return (int) (proportionPlayed * 100);
     }
 
     @Override

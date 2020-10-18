@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 public class S3RadioResource {
 
     private final S3Radio radio;
-    
+
     @Inject
     public S3RadioResource(S3Radio radio) {
         this.radio = radio;

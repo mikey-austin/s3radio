@@ -7,13 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Track {
 
-    @JsonProperty
     public final String name;
-    @JsonProperty
     public final long sizeInBytes;
-    @JsonIgnore
     public final Station station;
-    @JsonIgnore
     public final InputStream content;
 
     public Track(String name, Station station, InputStream content, long size) {
@@ -28,18 +24,22 @@ public class Track {
         return "Track [name=" + name + ", sizeInBytes=" + sizeInBytes + ", station=" + station + "]";
     }
 
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
 
+    @JsonIgnore
     public Station getStation() {
         return station;
     }
 
+    @JsonIgnore
     public InputStream getContent() {
         return content;
     }
 
+    @JsonProperty("sizeInBytes")
     public long getSizeInBytes() {
         return sizeInBytes;
     }

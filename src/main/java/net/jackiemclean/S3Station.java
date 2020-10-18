@@ -1,6 +1,7 @@
 package net.jackiemclean;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,11 +21,8 @@ public class S3Station implements Station, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(S3Station.class);
 
     private final AtomicBoolean isStarted;
-    @JsonProperty
     private final AtomicReference<TrackStream> currentStream;
-    @JsonProperty
     private final String name;
-    @JsonProperty
     private final String bucket;
     private final long lastModified;
     private final AmazonS3 s3Client;
@@ -47,8 +45,15 @@ public class S3Station implements Station, Runnable {
     }
 
     @Override
+    @JsonProperty("name")
     public String getName() {
         return name;
+    }
+
+    @Override
+    @JsonProperty("trackStream")
+    public Optional<TrackStream> getTrackStream() {
+        return Optional.ofNullable(currentStream.get());
     }
 
     @Override
