@@ -3,6 +3,7 @@ package net.jackiemclean;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -92,6 +93,11 @@ public class S3Radio implements Radio {
     @Override
     public Collection<Station> getStations() {
         return Collections.unmodifiableSet(stations);
+    }
+
+    @Override
+    public Optional<Station> getStation(String name) {
+        return stations.stream().filter(s -> name.equals(s.getName())).findFirst();
     }
 
     @Override

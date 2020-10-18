@@ -1,5 +1,6 @@
 package net.jackiemclean;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,12 +29,14 @@ public class S3Station implements Station, Runnable {
     private final AmazonS3 s3Client;
     private final TrackStreamFactory streamerFactory;
     private final TrackFactory trackFactory;
+    private final Track standbyTrack;
 
+    private volatile boolean standby = false;
     private volatile boolean shutdown = false;
     private volatile Thread streamThread = null;
 
     public S3Station(String name, String bucket, long lastModified, AmazonS3 s3Client,
-            TrackStreamFactory streamerFactory, TrackFactory trackFactory) {
+            TrackStreamFactory streamerFactory, TrackFactory trackFactory, File standbyFile) {
         this.name = name;
         this.bucket = bucket;
         this.lastModified = lastModified;
@@ -42,6 +45,7 @@ public class S3Station implements Station, Runnable {
         this.trackFactory = trackFactory;
         this.isStarted = new AtomicBoolean(false);
         this.currentStream = new AtomicReference<>(null);
+        this.standbyTrack = trackFactory.create("standby", this, standbyFile);
     }
 
     @Override
@@ -161,12 +165,14 @@ public class S3Station implements Station, Runnable {
 
         @Override
         public boolean hasNext() {
-            return listingIterator.hasNext() || currentListing.isTruncated();
+            return standby || listingIterator.hasNext() || currentListing.isTruncated();
         }
 
         @Override
         public Track next() {
-            if (listingIterator.hasNext()) {
+            if (standby) {
+                return standbyTrack;
+            } else if (listingIterator.hasNext()) {
                 return createTrack(listingIterator.next());
             } else if (currentListing.isTruncated()) {
                 currentListing = s3Client.listNextBatchOfObjects(currentListing);
@@ -183,6 +189,16 @@ public class S3Station implements Station, Runnable {
             String name = Files.getNameWithoutExtension(summary.getKey());
             return trackFactory.create(name, S3Station.this, obj.getObjectContent(), summary.getSize());
         }
+    }
+
+    @Override
+    public void standbyOn() {
+        standby = true;
+    }
+
+    @Override
+    public void standbyOff() {
+        standby = false;
     }
 
     @Override

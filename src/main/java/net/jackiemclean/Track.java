@@ -1,6 +1,7 @@
 package net.jackiemclean;
 
 import java.io.InputStream;
+import java.util.function.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,13 +11,17 @@ public class Track {
     public final String name;
     public final long sizeInBytes;
     public final Station station;
-    public final InputStream content;
+    public final Supplier<InputStream> contentSupplier;
 
-    public Track(String name, Station station, InputStream content, long size) {
+    public Track(String name, Station station, Supplier<InputStream> contentSupplier, long size) {
         this.name = name;
         this.station = station;
-        this.content = content;
+        this.contentSupplier = contentSupplier;
         this.sizeInBytes = size;
+    }
+
+    public Track(String name, Station station, InputStream content, long size) {
+        this(name, station, () -> content, size);
     }
 
     @Override
@@ -36,7 +41,7 @@ public class Track {
 
     @JsonIgnore
     public InputStream getContent() {
-        return content;
+        return contentSupplier.get();
     }
 
     @JsonProperty("sizeInBytes")
