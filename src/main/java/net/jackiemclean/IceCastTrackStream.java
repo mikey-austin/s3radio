@@ -101,4 +101,9 @@ public class IceCastTrackStream implements TrackStream {
     public void stop() {
         this.response.cancel(true);
     }
+
+    @Override
+    public String getTrackStreamUri() {
+        return icecastUri.toString();
+    }
 }

@@ -43,9 +43,12 @@ public class S3Radio implements Radio {
         this.stationFactory = stationFactory;
     }
 
+    public void refresh() {
+        merge(readFromS3());
+    }
+
     public void onStartup(@Observes StartupEvent startupEvent) {
-        Set<Station> stationsFromBucket = readFromS3();
-        merge(stationsFromBucket);
+        refresh();
     }
 
     private void merge(Set<Station> stationsFromBucket) {

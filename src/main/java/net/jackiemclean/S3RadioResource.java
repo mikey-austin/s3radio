@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -26,6 +27,14 @@ public class S3RadioResource {
     @Path("stations")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<Station> getStations() {
+        return radio.getStations();
+    }
+
+    @POST
+    @Path("refresh")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Station> refresh() {
+        radio.refresh();
         return radio.getStations();
     }
 
