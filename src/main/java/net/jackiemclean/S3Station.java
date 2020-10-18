@@ -31,7 +31,7 @@ public class S3Station implements Station, Runnable {
     private final TrackFactory trackFactory;
     private final Track standbyTrack;
 
-    private volatile boolean standby = false;
+    private volatile boolean standby = true;
     private volatile boolean shutdown = false;
     private volatile Thread streamThread = null;
 
