@@ -77,6 +77,7 @@ public class LibshoutTrackStream implements TrackStream {
         LOG.info("streaming track: {}", track);
         currentTrack.set(track);
         currentTrackBytesSoFar.set(0);
+        icecast.setMetadata(track.getName());
 
         String extension = streamFormat == Libshout.FORMAT_MP3 ? ".mp3" : ".ogg";
         File tmpFile = File.createTempFile("stream-buffer", extension);
