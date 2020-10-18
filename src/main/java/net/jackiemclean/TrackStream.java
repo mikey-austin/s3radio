@@ -13,4 +13,6 @@ public interface TrackStream {
     int getPercentPlayed();
 
     Optional<Track> getNowPlaying();
+
+    String getTrackStreamUri();
 }

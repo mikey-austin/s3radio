@@ -27,7 +27,6 @@ public class LibshoutTrackStream implements TrackStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(LibshoutTrackStream.class);
 
-    @JsonProperty
     private final String name;
     private final URI icecastUri;
     private final String password;
@@ -52,6 +51,12 @@ public class LibshoutTrackStream implements TrackStream {
     @JsonProperty("nowPlaying")
     public Optional<Track> getNowPlaying() {
         return Optional.ofNullable(currentTrack.get());
+    }
+
+    @Override
+    @JsonIgnore
+    public String getTrackStreamUri() {
+        return icecastUri.toString();
     }
 
     @Override

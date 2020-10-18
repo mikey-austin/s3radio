@@ -15,4 +15,6 @@ public interface Station extends Iterable<Track> {
     void standbyOn();
 
     void standbyOff();
+
+    Optional<String> getStreamUrl();
 }

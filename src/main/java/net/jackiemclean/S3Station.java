@@ -61,6 +61,12 @@ public class S3Station implements Station, Runnable {
     }
 
     @Override
+    @JsonProperty("streamUrl")
+    public Optional<String> getStreamUrl() {
+        return getTrackStream().map(TrackStream::getTrackStreamUri);
+    }
+
+    @Override
     public Iterator<Track> iterator() {
         return this.new TrackIterator();
     }
