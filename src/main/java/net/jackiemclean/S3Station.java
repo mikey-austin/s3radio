@@ -193,11 +193,17 @@ public class S3Station implements Station, Runnable {
 
     @Override
     public void standbyOn() {
+        if (!standby) {
+            LOG.info("{} entering standby", name);
+        }
         standby = true;
     }
 
     @Override
     public void standbyOff() {
+        if (standby) {
+            LOG.info("{} leaving standby", name);
+        }
         standby = false;
     }
 
