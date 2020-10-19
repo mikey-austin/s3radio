@@ -1,0 +1,3 @@
+[submodule "libshout-java"]
+	path = libshout-java
+	url = git@github.com:mikey-austin/libshout-java.git
