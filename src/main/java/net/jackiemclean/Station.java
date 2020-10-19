@@ -2,7 +2,7 @@ package net.jackiemclean;
 
 import java.util.Optional;
 
-public interface Station extends Iterable<Track> {
+public interface Station {
 
     String getName();
 

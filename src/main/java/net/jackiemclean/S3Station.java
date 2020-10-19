@@ -3,6 +3,7 @@ package net.jackiemclean;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,6 +32,7 @@ public class S3Station implements Station, Runnable {
     private final TrackFactory trackFactory;
     private final Track standbyTrack;
 
+    private volatile TrackIterator currentIterator = null;
     private volatile boolean standby = true;
     private volatile boolean shutdown = false;
     private volatile Thread streamThread = null;
@@ -67,11 +69,6 @@ public class S3Station implements Station, Runnable {
     }
 
     @Override
-    public Iterator<Track> iterator() {
-        return this.new TrackIterator();
-    }
-
-    @Override
     public void run() {
         try {
             TrackStream stream = streamerFactory.createStream(this);
@@ -79,11 +76,10 @@ public class S3Station implements Station, Runnable {
             this.currentStream.set(stream);
 
             while (!shutdown) {
-                for (Track track : this) {
-                    stream.play(track);
-                    if (shutdown) {
-                        break;
-                    }
+                Track track = nextTrack();
+                stream.play(track);
+                if (shutdown) {
+                    break;
                 }
             }
 
@@ -91,6 +87,17 @@ public class S3Station implements Station, Runnable {
         } catch (Exception e) {
             LOG.error("exception during stream operation: {}", name, e);
         }
+    }
+
+    public TrackIterator iterator() {
+        if (currentIterator != null && currentIterator.hasNext()) {
+            return currentIterator;
+        }
+        return currentIterator = this.new TrackIterator();
+    }
+
+    private Track nextTrack() {
+        return iterator().next();
     }
 
     @Override
@@ -190,6 +197,21 @@ public class S3Station implements Station, Runnable {
             return null;
         }
 
+        private void skipRandom() {
+            int toSkip = ThreadLocalRandom.current().nextInt(0, 200);
+            int skipped = toSkip;
+            for (int i = 0; i < toSkip; i++) {
+                if (listingIterator.hasNext()) {
+                    skipped = i + 1;
+                    listingIterator.next();
+                } else {
+                    break;
+                }
+            }
+
+            LOG.info("{}: skipped {} tracks", name, skipped);
+        }
+
         private Track createTrack(S3ObjectSummary summary) {
             S3Object obj = s3Client.getObject(bucket, summary.getKey());
             String name = Files.getNameWithoutExtension(summary.getKey());
@@ -209,6 +231,9 @@ public class S3Station implements Station, Runnable {
     public void standbyOff() {
         if (standby) {
             LOG.info("{} leaving standby", name);
+
+            // Consume the iterator so when we start in a random spot.
+            iterator().skipRandom();
         }
         standby = false;
     }

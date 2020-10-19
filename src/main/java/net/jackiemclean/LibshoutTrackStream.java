@@ -134,8 +134,8 @@ public class LibshoutTrackStream implements TrackStream {
             } catch (InterruptedException e) {
                 Thread.interrupted();
             } catch (IOException e) {
-                long jitter = ThreadLocalRandom.current().nextLong(1_000, 2_000);
-                sleepMs = jitter + 2 * sleepMs;
+                long jitter = ThreadLocalRandom.current().nextLong(100, 1_500);
+                sleepMs = Math.min(jitter + 2 * sleepMs, jitter + 60_000);
                 LOG.warn("{}: exception starting stream, trying again in {} seconds", name,
                         TimeUnit.MILLISECONDS.toSeconds(sleepMs), e);
             }
