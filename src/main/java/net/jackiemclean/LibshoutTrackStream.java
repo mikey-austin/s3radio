@@ -10,6 +10,8 @@ import java.net.SocketException;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -74,7 +76,9 @@ public class LibshoutTrackStream implements TrackStream {
 
     @Override
     public long play(Track track) throws IOException {
-        LOG.info("streaming track: {}", track);
+        if (!track.getName().matches("^standby")) {
+            LOG.info("streaming track: {}", track);
+        }
         currentTrack.set(track);
         currentTrackBytesSoFar.set(0);
         icecast.setMetadata(track.getName());
@@ -110,16 +114,32 @@ public class LibshoutTrackStream implements TrackStream {
     }
 
     @Override
-    public void start() throws IOException {
-        this.icecast = new Libshout(Paths.get(libshoutPath));
-        icecast.setHost(icecastUri.getHost());
-        icecast.setPort(icecastUri.getPort());
-        icecast.setProtocol(Libshout.PROTOCOL_HTTP);
-        icecast.setPassword(password);
-        icecast.setMount(name);
-        icecast.setFormat(streamFormat);
-        icecast.setName(Files.getNameWithoutExtension(name));
-        icecast.open();
+    public void start() {
+        long sleepMs = 0;
+        do {
+            try {
+                if (sleepMs > 0) {
+                    Thread.sleep(sleepMs);
+                }
+                this.icecast = new Libshout(Paths.get(libshoutPath));
+                icecast.setHost(icecastUri.getHost());
+                icecast.setPort(icecastUri.getPort());
+                icecast.setProtocol(Libshout.PROTOCOL_HTTP);
+                icecast.setPassword(password);
+                icecast.setMount(name);
+                icecast.setFormat(streamFormat);
+                icecast.setName(Files.getNameWithoutExtension(name));
+                icecast.open();
+                return;
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+            } catch (IOException e) {
+                long jitter = ThreadLocalRandom.current().nextLong(1_000, 2_000);
+                sleepMs = jitter + 2 * sleepMs;
+                LOG.warn("{}: exception starting stream, trying again in {} seconds", name,
+                        TimeUnit.MILLISECONDS.toSeconds(sleepMs), e);
+            }
+        } while (true);
     }
 
     @Override
