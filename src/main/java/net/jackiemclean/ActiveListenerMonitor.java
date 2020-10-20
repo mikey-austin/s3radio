@@ -1,5 +1,6 @@
 package net.jackiemclean;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -78,6 +79,13 @@ public class ActiveListenerMonitor implements Runnable {
                 Thread.sleep(10_000);
             } catch (InterruptedException e) {
                 break;
+            } catch (ConnectException e) {
+                try {
+                    LOG.warn("couldn't connect to icecast, trying again in 30 seconds");
+                    Thread.sleep(30_000);
+                } catch (InterruptedException e1) {
+                    break;
+                }
             } catch (Exception e) {
                 LOG.error("uncaught exception monitoring active listeners", e);
             }
