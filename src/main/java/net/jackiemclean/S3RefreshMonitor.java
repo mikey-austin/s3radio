@@ -47,7 +47,7 @@ public class S3RefreshMonitor implements Runnable {
         while (!shutdown) {
             try {
                 radio.refresh();
-                Thread.sleep(60_000);
+                Thread.sleep(600_000);
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
