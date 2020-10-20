@@ -2,6 +2,7 @@ package net.jackiemclean;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -165,6 +166,7 @@ public class S3Station implements Station, Runnable {
 
         private ObjectListing currentListing;
         private Iterator<S3ObjectSummary> listingIterator;
+        private int numEntries = 0;
 
         public TrackIterator() {
             this.currentListing = s3Client.listObjects(bucket, name);
@@ -172,7 +174,9 @@ public class S3Station implements Station, Runnable {
         }
 
         private void setNextIterator(ObjectListing listing) {
-            this.listingIterator = Iterators.filter(listing.getObjectSummaries().iterator(),
+            List<S3ObjectSummary> summaries = listing.getObjectSummaries();
+            this.numEntries = summaries.size();
+            this.listingIterator = Iterators.filter(summaries.iterator(),
                     os -> os.getKey().endsWith(".ogg") || os.getKey().endsWith(".mp3"));
         }
 
@@ -198,7 +202,7 @@ public class S3Station implements Station, Runnable {
         }
 
         private void skipRandom() {
-            int toSkip = ThreadLocalRandom.current().nextInt(0, 200);
+            int toSkip = ThreadLocalRandom.current().nextInt(0, numEntries);
             int skipped = toSkip;
             for (int i = 0; i < toSkip; i++) {
                 if (listingIterator.hasNext()) {

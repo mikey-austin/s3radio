@@ -120,6 +120,9 @@ public class LibshoutTrackStream implements TrackStream {
         long sleepMs = 0;
         do {
             try {
+                if (Thread.interrupted()) {
+                    break;
+                }
                 if (sleepMs > 0) {
                     Thread.sleep(sleepMs);
                 }
@@ -134,7 +137,7 @@ public class LibshoutTrackStream implements TrackStream {
                 icecast.open();
                 return;
             } catch (InterruptedException e) {
-                Thread.interrupted();
+                break;
             } catch (IOException e) {
                 long jitter = ThreadLocalRandom.current().nextLong(1_000, 3_000);
                 sleepMs = Math.min(jitter + 2 * sleepMs, jitter + 60_000);
