@@ -5,16 +5,16 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.URI;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.nio.client.HttpAsyncClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class IceCastTrackStream implements TrackStream {
     private final String name;
     private final String contentType;
     private final URI icecastUri;
-    private final HttpAsyncClient httpClient;
+    private final HttpClient httpClient;
 
     private PipedOutputStream streamOut;
     private RateLimitedStreamFactory streamFactory;
@@ -34,7 +34,7 @@ public class IceCastTrackStream implements TrackStream {
     private Future<HttpResponse> response;
 
     IceCastTrackStream(String name, String description, String genre, String icecastUri, String contentType,
-            HttpAsyncClient httpClient, RateLimitedStreamFactory streamFactory) {
+            HttpClient httpClient, RateLimitedStreamFactory streamFactory) {
         this.name = name;
         this.description = description;
         this.genre = genre;
@@ -77,24 +77,14 @@ public class IceCastTrackStream implements TrackStream {
         httpPut.setHeader("Ice-Genre", genre);
         httpPut.setHeader("Ice-Audio-Info", "samplerate=44100;quality=10%2e0;channels=2"); // TODO
 
-        FutureCallback<HttpResponse> cb = new FutureCallback<HttpResponse>() {
-            @Override
-            public void completed(HttpResponse result) {
-                LOG.info("icecast stream completed for: {}", name);
+        this.response = CompletableFuture.supplyAsync(() -> {
+            try {
+                return httpClient.execute(httpPut);
+            } catch (Exception e) {
+                LOG.error("couldn't reach icecast", e);
             }
-
-            @Override
-            public void failed(Exception e) {
-                LOG.error("icecast request failure for stream: {}", name, e);
-            }
-
-            @Override
-            public void cancelled() {
-                LOG.info("icecast request cancelled for stream: {}", name);
-            }
-        };
-
-        this.response = httpClient.execute(httpPut, cb);
+            return null;
+        });
     }
 
     @Override

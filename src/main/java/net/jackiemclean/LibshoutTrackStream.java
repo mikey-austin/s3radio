@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -114,7 +115,8 @@ public class LibshoutTrackStream implements TrackStream {
     }
 
     @Override
-    public void start() {
+    public void start() throws IOException {
+        extractLibshoutSo(libshoutPath);
         long sleepMs = 0;
         do {
             try {
@@ -140,6 +142,18 @@ public class LibshoutTrackStream implements TrackStream {
                         TimeUnit.MILLISECONDS.toSeconds(sleepMs), e);
             }
         } while (true);
+    }
+
+    private void extractLibshoutSo(String path) throws IOException {
+        // We assume the library is in the jar.
+        InputStream libFile = getClass().getClassLoader().getResourceAsStream("libshout-java.so");
+        File dest = new File(path);
+        if (!dest.exists()) {
+            LOG.info("extracting libshout-java.so to {}", path);
+            try (OutputStream output = new FileOutputStream(dest)) {
+                libFile.transferTo(output);
+            }
+        }
     }
 
     @Override

@@ -17,9 +17,8 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.nio.client.HttpAsyncClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +38,14 @@ public class ActiveListenerMonitor implements Runnable {
     private final Thread monitorThread;
     private final S3Radio radio;
     private final URI listMountsUri;
-    private final HttpAsyncClient httpClient;
+    private final HttpClient httpClient;
 
     private volatile boolean shutdown = false;
     private String icecastPassword;
 
     @Inject
     public ActiveListenerMonitor(S3Radio radio, @ConfigProperty(name = "icecast.baseUri") String icecastBaseUri,
-            @ConfigProperty(name = "icecast.password") String icecastPassword, HttpAsyncClient httpClient) {
+            @ConfigProperty(name = "icecast.password") String icecastPassword, HttpClient httpClient) {
         this.monitorThread = new Thread(this);
         this.radio = radio;
         this.listMountsUri = UriBuilder.fromUri(icecastBaseUri).path(MOUNTPOINT_PATH).build();
@@ -91,21 +90,7 @@ public class ActiveListenerMonitor implements Runnable {
         byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.ISO_8859_1));
         String authHeader = "Basic " + new String(encodedAuth);
         getReq.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
-        HttpResponse response = httpClient.execute(getReq, new FutureCallback<HttpResponse>() {
-            @Override
-            public void completed(HttpResponse result) {
-            }
-
-            @Override
-            public void failed(Exception e) {
-                LOG.error("could not contact icecast stats endpoint", e);
-            }
-
-            @Override
-            public void cancelled() {
-                LOG.warn("icecast request was cancelled");
-            }
-        }).get();
+        HttpResponse response = httpClient.execute(getReq);
 
         if (response.getStatusLine().getStatusCode() != 200) {
             LOG.error("failed to get icecast stats: {}", response.getStatusLine().toString());

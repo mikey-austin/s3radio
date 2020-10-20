@@ -3,25 +3,19 @@ package net.jackiemclean;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.apache.http.nio.client.HttpAsyncClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class TrackStreamFactory {
 
-    private final HttpAsyncClient httpClient;
-    private final RateLimitedStreamFactory streamFactory;
     private final String icecastBaseUri;
     private final String sourcePassword;
     private final String libshoutPath;
 
     @Inject
-    public TrackStreamFactory(HttpAsyncClient httpClient, RateLimitedStreamFactory streamFactory,
-            @ConfigProperty(name = "icecast.baseUri") String icecastBaseUri,
+    public TrackStreamFactory(@ConfigProperty(name = "icecast.baseUri") String icecastBaseUri,
             @ConfigProperty(name = "icecast.password") String sourcePassword,
-            @ConfigProperty(name = "icecast.libshoutPath") String libshoutPath) {
-        this.httpClient = httpClient;
-        this.streamFactory = streamFactory;
+            @ConfigProperty(name = "icecast.libshoutPath", defaultValue = "/tmp/libshout-java.so") String libshoutPath) {
         this.icecastBaseUri = icecastBaseUri;
         this.sourcePassword = sourcePassword;
         this.libshoutPath = libshoutPath;

@@ -9,7 +9,7 @@
     <aws.java.sdk.version>1.11.880</aws.java.sdk.version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <guava.version>29.0-jre</guava.version>
-    <httpclient.version>4.1.4</httpclient.version>
+    <httpclient.version>4.5.13</httpclient.version>
     <libshout-java.version>2.3.1</libshout-java.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <maven.compiler.source>11</maven.compiler.source>
@@ -60,7 +60,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpasyncclient</artifactId>
+      <artifactId>httpclient</artifactId>
       <version>${httpclient.version}</version>
     </dependency>
     <dependency>
@@ -75,6 +75,10 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-container-image-docker</artifactId>
     </dependency>
   </dependencies>
   <build>
