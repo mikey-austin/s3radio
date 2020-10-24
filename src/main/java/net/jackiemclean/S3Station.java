@@ -238,7 +238,12 @@ public class S3Station implements Station, Runnable {
             LOG.info("{} leaving standby", name);
 
             // Consume the iterator so when we start in a random spot.
-            iterator().skipRandom();
+            TrackStream stream = currentStream.get();
+            if (stream != null) {
+                stream.getNowPlaying()
+                        .filter(Track::isStandby)
+                        .ifPresent(track -> iterator().skipRandom());
+            }
         }
         standby = false;
     }
