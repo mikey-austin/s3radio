@@ -190,15 +190,17 @@ public class S3Station implements Station, Runnable {
         public Track next() {
             Track nextTrack = null;
             if (listingIterator.hasNext()) {
-                nextTrack = createTrack(listingIterator.next());
+                S3ObjectSummary nextListing = listingIterator.next();
+                nextTrack = standby ? standbyTrack : createTrack(nextListing);
             } else if (currentListing.isTruncated()) {
                 currentListing = s3Client.listNextBatchOfObjects(currentListing);
                 setNextIterator(currentListing);
                 if (listingIterator.hasNext()) {
-                    nextTrack = createTrack(listingIterator.next());
+                    S3ObjectSummary nextListing = listingIterator.next();
+                    nextTrack = standby ? standbyTrack : createTrack(nextListing);
                 }
             }
-            return standby ? standbyTrack : nextTrack;
+            return nextTrack;
         }
 
         private Track createTrack(S3ObjectSummary summary) {
