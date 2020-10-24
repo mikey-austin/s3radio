@@ -1,17 +1,17 @@
 package net.jackiemclean;
 
-import java.io.InputStream;
-import java.util.function.Supplier;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.InputStream;
+import java.util.function.Supplier;
+
 public class Track {
 
-    public final String name;
-    public final long sizeInBytes;
-    public final Station station;
-    public final Supplier<InputStream> contentSupplier;
+    private final String name;
+    private final long sizeInBytes;
+    private final Station station;
+    private final Supplier<InputStream> contentSupplier;
 
     public Track(String name, Station station, Supplier<InputStream> contentSupplier, long size) {
         this.name = name;
@@ -26,12 +26,23 @@ public class Track {
 
     @Override
     public String toString() {
-        return "Track [name=" + name + ", sizeInBytes=" + sizeInBytes + ", station=" + station + "]";
+        return "Track [name="
+                + name
+                + ", sizeInBytes="
+                + sizeInBytes
+                + ", station="
+                + station
+                + "]";
     }
 
     @JsonProperty("name")
     public String getName() {
         return name;
+    }
+
+    @JsonIgnore
+    public boolean isStandby() {
+        return name.matches("^standby");
     }
 
     @JsonIgnore

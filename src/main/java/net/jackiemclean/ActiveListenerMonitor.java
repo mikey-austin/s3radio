@@ -1,6 +1,18 @@
 package net.jackiemclean;
 
-import java.net.ConnectException;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.StartupEvent;
+
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -15,19 +27,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.Startup;
-import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
 @Startup
@@ -45,8 +44,11 @@ public class ActiveListenerMonitor implements Runnable {
     private String icecastPassword;
 
     @Inject
-    public ActiveListenerMonitor(S3Radio radio, @ConfigProperty(name = "icecast.baseUri") String icecastBaseUri,
-            @ConfigProperty(name = "icecast.password") String icecastPassword, HttpClient httpClient) {
+    public ActiveListenerMonitor(
+            S3Radio radio,
+            @ConfigProperty(name = "icecast.baseUri") String icecastBaseUri,
+            @ConfigProperty(name = "icecast.password") String icecastPassword,
+            HttpClient httpClient) {
         this.monitorThread = new Thread(this);
         this.radio = radio;
         this.listMountsUri = UriBuilder.fromUri(icecastBaseUri).path(MOUNTPOINT_PATH).build();
@@ -74,20 +76,19 @@ public class ActiveListenerMonitor implements Runnable {
             try {
                 Document mountPoints = fetchMountpoints();
                 if (mountPoints != null) {
-                    radio.getStations().forEach(station -> checkActiveListeners(station, mountPoints));
+                    radio.getStations()
+                            .forEach(station -> checkActiveListeners(station, mountPoints));
                 }
                 Thread.sleep(10_000);
             } catch (InterruptedException e) {
                 break;
-            } catch (ConnectException e) {
+            } catch (Exception e) {
                 try {
                     LOG.warn("couldn't connect to icecast, trying again in 30 seconds");
                     Thread.sleep(30_000);
                 } catch (InterruptedException e1) {
                     break;
                 }
-            } catch (Exception e) {
-                LOG.error("uncaught exception monitoring active listeners", e);
             }
         }
     }

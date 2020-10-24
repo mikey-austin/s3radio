@@ -1,13 +1,5 @@
 package net.jackiemclean;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
@@ -18,6 +10,14 @@ import com.google.common.io.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class S3Station implements Station, Runnable {
 
@@ -38,8 +38,14 @@ public class S3Station implements Station, Runnable {
     private volatile boolean shutdown = false;
     private volatile Thread streamThread = null;
 
-    public S3Station(String name, String bucket, long lastModified, AmazonS3 s3Client,
-            TrackStreamFactory streamerFactory, TrackFactory trackFactory, File standbyFile) {
+    public S3Station(
+            String name,
+            String bucket,
+            long lastModified,
+            AmazonS3 s3Client,
+            TrackStreamFactory streamerFactory,
+            TrackFactory trackFactory,
+            File standbyFile) {
         this.name = name;
         this.bucket = bucket;
         this.lastModified = lastModified;
@@ -140,25 +146,17 @@ public class S3Station implements Station, Runnable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
         S3Station other = (S3Station) obj;
         if (bucket == null) {
-            if (other.bucket != null)
-                return false;
-        } else if (!bucket.equals(other.bucket))
-            return false;
-        if (lastModified != other.lastModified)
-            return false;
+            if (other.bucket != null) return false;
+        } else if (!bucket.equals(other.bucket)) return false;
+        if (lastModified != other.lastModified) return false;
         if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
+            if (other.name != null) return false;
+        } else if (!name.equals(other.name)) return false;
         return true;
     }
 
@@ -176,8 +174,10 @@ public class S3Station implements Station, Runnable {
         private void setNextIterator(ObjectListing listing) {
             List<S3ObjectSummary> summaries = listing.getObjectSummaries();
             this.numEntries = summaries.size();
-            this.listingIterator = Iterators.filter(summaries.iterator(),
-                    os -> os.getKey().endsWith(".ogg") || os.getKey().endsWith(".mp3"));
+            this.listingIterator =
+                    Iterators.filter(
+                            summaries.iterator(),
+                            os -> os.getKey().endsWith(".ogg") || os.getKey().endsWith(".mp3"));
         }
 
         @Override
@@ -219,7 +219,8 @@ public class S3Station implements Station, Runnable {
         private Track createTrack(S3ObjectSummary summary) {
             S3Object obj = s3Client.getObject(bucket, summary.getKey());
             String name = Files.getNameWithoutExtension(summary.getKey());
-            return trackFactory.create(name, S3Station.this, obj.getObjectContent(), summary.getSize());
+            return trackFactory.create(
+                    name, S3Station.this, obj.getObjectContent(), summary.getSize());
         }
     }
 
@@ -244,7 +245,14 @@ public class S3Station implements Station, Runnable {
 
     @Override
     public String toString() {
-        return "S3Station [bucket=" + bucket + ", isStarted=" + isStarted + ", lastModified=" + lastModified + ", name="
-                + name + "]";
+        return "S3Station [bucket="
+                + bucket
+                + ", isStarted="
+                + isStarted
+                + ", lastModified="
+                + lastModified
+                + ", name="
+                + name
+                + "]";
     }
 }

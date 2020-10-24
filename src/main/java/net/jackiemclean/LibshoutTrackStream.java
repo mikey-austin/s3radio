@@ -1,5 +1,13 @@
 package net.jackiemclean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gmail.kunicins.olegs.libshout.Libshout;
+import com.google.common.io.Files;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,7 +16,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,20 +25,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.UriBuilder;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gmail.kunicins.olegs.libshout.Libshout;
-import com.google.common.io.Files;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class LibshoutTrackStream implements TrackStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(LibshoutTrackStream.class);
 
     private final String name;
     private final URI icecastUri;
+    private final URI publicIcecastUri;
     private final String password;
     private final String libshoutPath;
     private final AtomicReference<Track> currentTrack;
@@ -40,10 +40,16 @@ public class LibshoutTrackStream implements TrackStream {
 
     private Libshout icecast;
 
-    LibshoutTrackStream(String name, String icecastUri, String password, String libshoutPath) {
+    LibshoutTrackStream(
+            String name,
+            String icecastUri,
+            String password,
+            String libshoutPath,
+            String publicIcecastUri) {
         this.name = name;
         this.password = password;
         this.icecastUri = UriBuilder.fromUri(icecastUri).path(name).build();
+        this.publicIcecastUri = UriBuilder.fromUri(publicIcecastUri).path(name).build();
         this.libshoutPath = libshoutPath;
         this.currentTrack = new AtomicReference<>();
         this.currentTrackBytesSoFar = new AtomicInteger();
@@ -59,7 +65,7 @@ public class LibshoutTrackStream implements TrackStream {
     @Override
     @JsonIgnore
     public String getTrackStreamUri() {
-        return icecastUri.toString();
+        return publicIcecastUri.toString();
     }
 
     @Override
@@ -77,12 +83,12 @@ public class LibshoutTrackStream implements TrackStream {
 
     @Override
     public long play(Track track) throws IOException {
-        if (!track.getName().matches("^standby")) {
+        if (!track.isStandby()) {
             LOG.info("streaming track: {}", track);
+            icecast.setMetadata(track.getName());
         }
         currentTrack.set(track);
         currentTrackBytesSoFar.set(0);
-        icecast.setMetadata(track.getName());
 
         String extension = streamFormat == Libshout.FORMAT_MP3 ? ".mp3" : ".ogg";
         File tmpFile = File.createTempFile("stream-buffer", extension);
@@ -141,8 +147,11 @@ public class LibshoutTrackStream implements TrackStream {
             } catch (IOException e) {
                 long jitter = ThreadLocalRandom.current().nextLong(1_000, 3_000);
                 sleepMs = Math.min(jitter + 2 * sleepMs, jitter + 60_000);
-                LOG.warn("{}: exception starting stream, trying again in {} seconds", name,
-                        TimeUnit.MILLISECONDS.toSeconds(sleepMs), e);
+                LOG.warn(
+                        "{}: exception starting stream, trying again in {} seconds",
+                        name,
+                        TimeUnit.MILLISECONDS.toSeconds(sleepMs),
+                        e);
             }
         } while (true);
     }

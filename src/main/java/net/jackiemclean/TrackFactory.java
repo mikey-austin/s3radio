@@ -11,13 +11,17 @@ import javax.enterprise.context.ApplicationScoped;
 public class TrackFactory {
 
     public Track create(String name, Station station, File trackFile) {
-        return new Track(name, station, () -> {
-            try {
-                return new FileInputStream(trackFile);
-            } catch (FileNotFoundException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }, trackFile.length());
+        return new Track(
+                name,
+                station,
+                () -> {
+                    try {
+                        return new FileInputStream(trackFile);
+                    } catch (FileNotFoundException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                },
+                trackFile.length());
     }
 
     public Track create(String name, Station station, InputStream content, long size) {

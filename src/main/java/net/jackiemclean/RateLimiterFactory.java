@@ -1,9 +1,9 @@
 package net.jackiemclean;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
-
-import com.google.common.util.concurrent.RateLimiter;
 
 @Dependent
 public class RateLimiterFactory {

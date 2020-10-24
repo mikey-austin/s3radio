@@ -1,5 +1,17 @@
 package net.jackiemclean;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.StartupEvent;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,18 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.Startup;
-import io.quarkus.runtime.StartupEvent;
 
 @Startup
 @ApplicationScoped
@@ -35,7 +35,9 @@ public class S3Radio implements Radio {
     private final S3StationFactory stationFactory;
 
     @Inject
-    public S3Radio(AmazonS3 s3Client, @ConfigProperty(name = "s3.bucketName") String bucketName,
+    public S3Radio(
+            AmazonS3 s3Client,
+            @ConfigProperty(name = "s3.bucketName") String bucketName,
             S3StationFactory stationFactory) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
@@ -76,7 +78,8 @@ public class S3Radio implements Radio {
                 String name = summary.getKey().split("/")[0];
                 if (!name.equals(lastName)) {
                     long lastModified = summary.getLastModified().toInstant().getEpochSecond();
-                    stations.add(stationFactory.create(name, summary.getBucketName(), lastModified));
+                    stations.add(
+                            stationFactory.create(name, summary.getBucketName(), lastModified));
                     lastName = name;
                 }
             }
