@@ -118,6 +118,11 @@ public class ActiveListenerMonitor implements Runnable {
         XPath xPath = XPathFactory.newInstance().newXPath();
         try {
             Object result = xPath.compile(expr).evaluate(mountPoints, XPathConstants.NUMBER);
+            if (result == null) {
+                // If we couldn't find the mount in icecast, unmount the station.
+                station.unmount();
+            }
+
             if (result == null || ((Number) result).intValue() <= 0) {
                 station.standbyOn();
             } else {

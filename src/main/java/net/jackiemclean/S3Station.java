@@ -15,7 +15,6 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -24,6 +23,7 @@ public class S3Station implements Station, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(S3Station.class);
 
     private final AtomicBoolean isStarted;
+    private final AtomicBoolean isMounted;
     private final AtomicReference<TrackStream> currentStream;
     private final String name;
     private final String bucket;
@@ -54,6 +54,7 @@ public class S3Station implements Station, Runnable {
         this.trackFactory = trackFactory;
         this.isStarted = new AtomicBoolean(false);
         this.currentStream = new AtomicReference<>(null);
+        this.isMounted = new AtomicBoolean(false);
         this.standbyTrack = trackFactory.create("standby", this, standbyFile);
     }
 
@@ -182,38 +183,22 @@ public class S3Station implements Station, Runnable {
 
         @Override
         public boolean hasNext() {
-            return standby || listingIterator.hasNext() || currentListing.isTruncated();
+            return listingIterator.hasNext() || currentListing.isTruncated();
         }
 
         @Override
         public Track next() {
-            if (standby) {
-                return standbyTrack;
-            } else if (listingIterator.hasNext()) {
-                return createTrack(listingIterator.next());
+            Track nextTrack = null;
+            if (listingIterator.hasNext()) {
+                nextTrack = createTrack(listingIterator.next());
             } else if (currentListing.isTruncated()) {
                 currentListing = s3Client.listNextBatchOfObjects(currentListing);
                 setNextIterator(currentListing);
                 if (listingIterator.hasNext()) {
-                    return createTrack(listingIterator.next());
+                    nextTrack = createTrack(listingIterator.next());
                 }
             }
-            return null;
-        }
-
-        private void skipRandom() {
-            int toSkip = ThreadLocalRandom.current().nextInt(0, numEntries);
-            int skipped = toSkip;
-            for (int i = 0; i < toSkip; i++) {
-                if (listingIterator.hasNext()) {
-                    skipped = i + 1;
-                    listingIterator.next();
-                } else {
-                    break;
-                }
-            }
-
-            LOG.info("{}: skipped {} tracks", name, skipped);
+            return standby ? standbyTrack : nextTrack;
         }
 
         private Track createTrack(S3ObjectSummary summary) {
@@ -226,6 +211,7 @@ public class S3Station implements Station, Runnable {
 
     @Override
     public void standbyOn() {
+        mount();
         if (!standby) {
             LOG.info("{} entering standby", name);
         }
@@ -234,16 +220,9 @@ public class S3Station implements Station, Runnable {
 
     @Override
     public void standbyOff() {
+        mount();
         if (standby) {
             LOG.info("{} leaving standby", name);
-
-            // Consume the iterator so when we start in a random spot.
-            TrackStream stream = currentStream.get();
-            if (stream != null) {
-                stream.getNowPlaying()
-                        .filter(Track::isStandby)
-                        .ifPresent(track -> iterator().skipRandom());
-            }
         }
         standby = false;
     }
@@ -259,5 +238,21 @@ public class S3Station implements Station, Runnable {
                 + ", name="
                 + name
                 + "]";
+    }
+
+    @Override
+    public boolean isMounted() {
+        return isMounted.get();
+    }
+
+    @Override
+    public void mount() {
+        isMounted.set(true);
+    }
+
+    @Override
+    public void unmount() {
+        LOG.warn("unmounting {}", this);
+        isMounted.set(false);
     }
 }

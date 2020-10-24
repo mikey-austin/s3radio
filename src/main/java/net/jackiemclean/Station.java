@@ -16,5 +16,11 @@ public interface Station {
 
     void standbyOff();
 
+    void mount();
+
+    void unmount();
+
+    boolean isMounted();
+
     Optional<String> getStreamUrl();
 }
