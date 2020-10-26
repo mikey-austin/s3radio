@@ -121,9 +121,10 @@ public class ActiveListenerMonitor implements Runnable {
             if (result == null) {
                 // If we couldn't find the mount in icecast, unmount the station.
                 station.unmount();
+                return;
             }
 
-            if (result == null || ((Number) result).intValue() <= 0) {
+            if (((Number) result).intValue() <= 0) {
                 station.standbyOn();
             } else {
                 station.standbyOff();
